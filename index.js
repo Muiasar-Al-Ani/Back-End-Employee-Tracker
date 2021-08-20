@@ -33,7 +33,7 @@ const promptInitiate = () => {
       {
         type: "list",
         message: "What would you like to do?",
-        name: "choise",
+        name: "choice",
         choice: [
           "View All Employees?",
           "Add Employee?",
@@ -46,7 +46,7 @@ const promptInitiate = () => {
       },
     ])
     .then(answer => {
-    // Checks if the user choice matches the case then calls the appropriate function
+      // Checks if the user choice matches the case then calls the appropriate function
       switch (answer.choice) {
         case "View All Employees?":
           viewAllEmployees();
@@ -54,15 +54,15 @@ const promptInitiate = () => {
         case "Add Employee?":
           addEmployee();
           break;
-          case "Update Employee Role":
-            updateEmployeeRole();
-            break;
+        case "Update Employee Role":
+          updateEmployeeRole();
+          break;
         case "View All Roles?":
           viewAllRoles();
           break;
-          case "Add Role?":
-            addRole();
-            break;
+        case "Add Role?":
+          addRole();
+          break;
         case "View all Departments":
           viewAllDepartments();
           break;
@@ -70,5 +70,58 @@ const promptInitiate = () => {
           addDepartment();
           break;
       }
+    });
+};
+
+const viewAllEmployees = () => {
+  databaseConnection.query(
+    'SELECT employee.id, employee.first_name, employee.last_name, role.title, role.salary, department.name, CONCAT(employee.first_name, " ", employee.last_name) AS Manager FROM employee',
+    (err, table) => {
+      if (err) {
+        console.log(err);
+      }
+      console.table(table);
+      promptInitiate();
+    }
+  );
+};
+
+const addEmployee = () => {
+  inquirer
+    .prompt([
+      {
+        type: "input",
+        message: "What id the employee's first name?",
+        name: "firstName",
+      },
+      {
+        type: "input",
+        message: "What is the employee's last name?",
+        name: "lastName",
+      },
+      {
+        type: "list",
+        message: "What is the employee role?",
+        name: "role",
+        choices: [
+          "Sales Lead",
+          "Salesperson",
+          "Lead Engineer",
+          "Software Engineer",
+          "Account Manager",
+          "Accountant",
+          "Legal Team Lead",
+        ],
+      },
+    ])
+    .then(answer => {
+        const role_id;
+        databaseConnection.query(`SELECT department_id FROM role WHERE ${answer.role} = role.title`, (err, result) => {
+            role_id = result;
+        })
+
+      databaseConnection.query(
+        `INSERT INTO employee (first_name, last_name, role_id, manager_id) VALUES (${answer.firstName}, ${answer.lastName}, ${role_id}, NULL);`
+      );
     });
 };
