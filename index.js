@@ -110,9 +110,8 @@ function addEmployee() {
       }
 
       results.map(manager => {
-        managerArray.push(`${manager.first_name} ${manager.last_name}`);
+        return managerArray.push(`${manager.first_name} ${manager.last_name}`);
       });
-      return managerArray;
     }
   );
 
@@ -154,7 +153,7 @@ function addEmployee() {
       };
 
       databaseConnection.query(
-        "INSERT INTO employee SET ?",
+        "INSERT INTO employee SET ?;",
         newEmployee,
         err => {
           if (err) {
@@ -167,47 +166,55 @@ function addEmployee() {
     });
 }
 
-// function getEmployeeNames () {
-//   const employeeNames = [];
-//   results.map(employee =>
-//     employeeNames.push(`${employee.first_name} ${employee.last_name}`)
-//   );
-//   return employeeNames;
-// }
-
-// databaseConnection.query(
-//   "SELECT employee.firstName, employee.last_name, role.title FROM employee JOIN role ON employee.role_id = role.id;",
-//   (err, results) => {
-//     if (err) {
-//       console.log(err);
-//     }
-
 function updateEmployeeRole() {
   let employeeArray = [];
   let roleArray = [];
-  
-  databaseConnection.query("SELECT * FROM role", (err, results) => {
+
+  databaseConnection.query("SELECT * FROM role;", (err, results) => {
     if (err) {
       console.log(err);
     }
     return results.map(role => roleArray.push(`${role.title}`));
   });
 
-  
+  databaseConnection.query(
+    "SELECT first_name, last_name FROM employee",
+    (err, results) => {
+      console.log(results)
+      if (err) {
+        console.log(err);
+      }
 
+      results.map(employee => {
+        return employeeArray.push(
+          `${employee.first_name} ${employee.last_name}`
+        );
+      });
+    }
+  );
 
-  inquirer.prompt([
-    {
-      name: "employeeName",
-      type: "rawlist",
-      choices: getEmployeeNames(),
-      message: "Which employee's role do you want to update?",
-    },
-    {
-      name: "role",
-      type: "rawlist",
-      message: "What is the employee's new title",
-      choices: selectRole(),
-    },
-  ]);
+  inquirer
+    .prompt([
+      {
+        name: "employeeName",
+        type: "rawlist",
+        choices: employeeArray,
+        message: "Which employee's role do you want to update?",
+      },
+      {
+        name: "role",
+        type: "rawlist",
+        message: "Which role do you want to assign the selected employee?",
+        choices: roleArray,
+      },
+    ])
+    .then(([role, employeeName]) => {
+      let last_name = employeeName.split(' ')[1]
+      databaseConnection.query(`UPDATE employee SET role = ${role} WHERE last_name = ${last_name};`, (err) => {
+        if (err) {
+          console.log(err);
+        }
+        promptInitiate()
+      })
+    });
 }
