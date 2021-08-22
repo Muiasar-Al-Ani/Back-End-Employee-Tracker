@@ -318,4 +318,17 @@ function viewAllDepartments() {
   );
 }
 
-
+function addDepartment(){
+  inquirer.prompt({
+    name: "departmentName",
+    type: "input",
+    message: "What is the name of the department?"
+  }).then((answer) => {
+    databaseConnection.query(`INSERT INTO department (name) VALUES ("${answer.departmentName}");`, (err, res) => {
+      if (err) {
+        console.log(err);
+      }
+      promptInitiate();
+    })
+  })
+}
