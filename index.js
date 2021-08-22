@@ -10,6 +10,7 @@ const consoleTable = require("console.table");
 // Imports and requires the promise mysql npm package
 const promiseSQL = require("promise-mysql");
 
+// Declares the connection properties that will be used to established the connection
 const connectionProperties = {
   host: "localhost",
   port: 3306,
@@ -83,7 +84,7 @@ function promptInitiate() {
     });
 }
 
-//
+// Views all the employees in on table to the console
 function viewAllEmployees() {
   databaseConnection.query(
     "SELECT employee.id, employee.first_name, employee.last_name, role.title, department.name AS department, role.salary, CONCAT(e.first_name, ' ' ,e.last_name) AS manager FROM employee INNER JOIN role on role.id = employee.role_id INNER JOIN department on department.id = role.department_id left join employee e on employee.manager_id = e.id;",
@@ -173,6 +174,7 @@ function addEmployee() {
     });
 }
 
+// Updates Employee role in database based on user's input 
 function updateEmployeeRole() {
   let employeeArray = [];
   let roleArray = [];
@@ -239,6 +241,8 @@ function updateEmployeeRole() {
     });
 }
 
+
+// Views all roles in the database in a table form to the console
 function viewAllRoles() {
   databaseConnection.query(
     "SELECT role.id, role.title, role.salary FROM role;",
@@ -252,6 +256,8 @@ function viewAllRoles() {
   );
 }
 
+
+// Adds a role to the role table in the database based on the user's input
 function addRole() {
   let departmentArray = [];
 
@@ -307,6 +313,8 @@ function addRole() {
     });
 }
 
+
+// Views all the departments in the database in a  table form to the console
 function viewAllDepartments() {
   databaseConnection.query(
     "SELECT department.id, department.name AS 'department name' FROM department;",
@@ -320,6 +328,8 @@ function viewAllDepartments() {
   );
 }
 
+
+// Adds a new department to the department table in the database based on the user's input
 function addDepartment() {
   inquirer
     .prompt({
