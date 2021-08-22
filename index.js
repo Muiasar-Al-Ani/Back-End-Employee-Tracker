@@ -2,22 +2,24 @@
 const inquirer = require("inquirer");
 
 // Imports and requires mysql2 npm package
-const mysql = require("mysql2");
+const mysql = require("mysql");
 
 // Imports and requires console.table npm package
 const consoleTable = require("console.table");
 
 // Imports and requires the promise mysql npm package
-const promise = require("promise-mysql");
+const promiseSQL = require("promise-mysql");
 
-// Establishes the connection with the database by using the specified information
-const databaseConnection = mysql.createConnection({
+const connectionProperties = {
   host: "localhost",
   port: 3306,
   user: "root",
   password: "0000",
   database: "employees_database",
-});
+};
+
+// Establishes the connection with the database by using the specified information
+const databaseConnection = mysql.createConnection(connectionProperties);
 
 // Checks if the database connection failed or gave an error
 // If not logs that connection established and calls for the prompt function
@@ -170,51 +172,64 @@ function updateEmployeeRole() {
   let employeeArray = [];
   let roleArray = [];
 
-  databaseConnection.query("SELECT * FROM role;", (err, results) => {
-    if (err) {
-      console.log(err);
-    }
-    return results.map(role => roleArray.push(`${role.title}`));
-  });
+  promiseSQL
+    .createConnection(connectionProperties)
+    .then(conn => {
+      return Promise.all([
+        conn.query("SELECT id, title FROM role ORDER BY title ASC"),
+        conn.query(
+          "SELECT employee.id, concat(employee.first_name, ' ' ,  employee.last_name) AS Employee FROM employee ORDER BY Employee ASC"
+        ),
+      ]);
+    })
+    .then(([roles, employees]) => {
+      roles.map(role => roleArray.push(role.title));
 
-  databaseConnection.query(
-    "SELECT first_name, last_name FROM employee",
-    (err, results) => {
-      console.log(results)
-      if (err) {
-        console.log(err);
-      }
+      employees.map(employee => employeeArray.push(employee.Employee));
 
-      results.map(employee => {
-        return employeeArray.push(
-          `${employee.first_name} ${employee.last_name}`
-        );
-      });
-    }
-  );
+      return Promise.all([roles, employees]);
+    })
+    .then(([roles, employees]) => {
+      inquirer
+        .prompt([
+          {
+            name: "employee",
+            type: "list",
+            choices: employeeArray,
+            message: "Which employee's role do you want to update?",
+          },
+          {
+            name: "role",
+            type: "list",
+            message: "Which role do you want to assign the selected employee?",
+            choices: roleArray,
+          },
+        ])
+        .then(answer => {
+          let role_id;
+          let employee_id;
 
-  inquirer
-    .prompt([
-      {
-        name: "employeeName",
-        type: "rawlist",
-        choices: employeeArray,
-        message: "Which employee's role do you want to update?",
-      },
-      {
-        name: "role",
-        type: "rawlist",
-        message: "Which role do you want to assign the selected employee?",
-        choices: roleArray,
-      },
-    ])
-    .then(([role, employeeName]) => {
-      let last_name = employeeName.split(' ')[1]
-      databaseConnection.query(`UPDATE employee SET role = ${role} WHERE last_name = ${last_name};`, (err) => {
-        if (err) {
-          console.log(err);
-        }
-        promptInitiate()
-      })
+          for (let i = 0; i < roles.length; i++) {
+            if (answer.role == roles[i].title) {
+              role_id = roles[i].id;
+            }
+          }
+
+          for (let i = 0; i < employees.length; i++) {
+            if (answer.employee == employees[i].Employee) {
+              employee_id = employees[i].id;
+            }
+          }
+
+          databaseConnection.query(
+            `UPDATE employee SET role_id = ${role_id} WHERE id = ${employee_id}`,
+            (err, res) => {
+              if (err) {
+                console.log(err);
+              }
+              promptInitiate();
+            }
+          );
+        });
     });
 }
