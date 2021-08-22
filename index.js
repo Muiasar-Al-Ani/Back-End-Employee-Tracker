@@ -47,6 +47,7 @@ function promptInitiate() {
           "Add Role?",
           "View all Departments",
           "Add Department?",
+          "Exit",
         ],
       },
     ])
@@ -73,6 +74,10 @@ function promptInitiate() {
           break;
         case "Add Department?":
           addDepartment();
+          break;
+        case "Exit":
+          databaseConnection.end();
+          console.log("Bye");
           break;
       }
     });
@@ -258,9 +263,7 @@ function addRole() {
       );
     })
     .then(departments => {
-       departments.map(department =>
-        departmentArray.push(department.name)
-      );
+      departments.map(department => departmentArray.push(department.name));
       return departments;
     })
     .then(departments => {
@@ -304,7 +307,6 @@ function addRole() {
     });
 }
 
-
 function viewAllDepartments() {
   databaseConnection.query(
     "SELECT department.id, department.name AS 'department name' FROM department;",
@@ -318,17 +320,22 @@ function viewAllDepartments() {
   );
 }
 
-function addDepartment(){
-  inquirer.prompt({
-    name: "departmentName",
-    type: "input",
-    message: "What is the name of the department?"
-  }).then((answer) => {
-    databaseConnection.query(`INSERT INTO department (name) VALUES ("${answer.departmentName}");`, (err, res) => {
-      if (err) {
-        console.log(err);
-      }
-      promptInitiate();
+function addDepartment() {
+  inquirer
+    .prompt({
+      name: "departmentName",
+      type: "input",
+      message: "What is the name of the department?",
     })
-  })
+    .then(answer => {
+      databaseConnection.query(
+        `INSERT INTO department (name) VALUES ("${answer.departmentName}");`,
+        (err, res) => {
+          if (err) {
+            console.log(err);
+          }
+          promptInitiate();
+        }
+      );
+    });
 }
