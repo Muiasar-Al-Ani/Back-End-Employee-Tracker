@@ -247,6 +247,59 @@ function viewAllRoles() {
   );
 }
 
+function addRole() {
+  let departmentArray = [];
 
+  promiseSQL
+    .createConnection(connectionProperties)
+    .then(conn => {
+      return conn.query(
+        "SELECT department.id, department.name FROM department;"
+      );
+    })
+    .then(departments => {
+       departments.map(department =>
+        departmentArray.push(department.name)
+      );
+      return departments;
+    })
+    .then(departments => {
+      inquirer
+        .prompt([
+          {
+            name: "departmentRole",
+            type: "input",
+            message: "What is the name of the department?",
+          },
+          {
+            name: "salary",
+            type: "number",
+            message: "What is the salary of the role?",
+          },
+          {
+            name: "department",
+            type: "list",
+            message: "Which department does the role belong to?",
+            choices: departmentArray,
+          },
+        ])
+        .then(answer => {
+          let department_id;
+          for (let i = 0; i < departments.length; i++) {
+            if (answer.department == departments[i].name) {
+              department_id = departments[i].id;
+            }
+          }
 
-
+          databaseConnection.query(
+            `INSERT INTO role (title, salary, department_id) VALUES ("${answer.departmentRole}", ${answer.salary}, ${department_id})`,
+            (err, res) => {
+              if (err) {
+                console.log(err);
+              }
+              promptInitiate();
+            }
+          );
+        });
+    });
+}
