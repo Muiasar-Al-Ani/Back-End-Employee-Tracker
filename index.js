@@ -2,7 +2,7 @@
 const inquirer = require("inquirer");
 
 // Imports and requires mysql2 npm package
-const mysql = require("mysql");
+const mysql = require("mysql2");
 
 // Imports and requires console.table npm package
 const consoleTable = require("console.table");
